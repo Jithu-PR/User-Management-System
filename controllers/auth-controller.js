@@ -106,7 +106,7 @@ const loginUser = async (req, res) => {
                 userName : checkUser.userName,
                 email : checkUser.email,
                 gender : checkUser.gender,
-                dob : checkUser.dob,
+                dob : checkUser.dob.toISOString().split('T')[0],
                 country : checkUser.country
             },
             token : token,
