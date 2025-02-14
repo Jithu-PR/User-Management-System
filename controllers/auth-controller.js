@@ -16,6 +16,7 @@ const passwordValidationSchema = Yup.string()
 
 //register
 const registerUser = async (req, res) => {
+  
   const { userName, email, password, gender, dob, country } = req.body;
 
   if (userName && email && password && gender && dob && country) {
@@ -26,6 +27,13 @@ const registerUser = async (req, res) => {
         return res.json({
           success: false,
           message: error.message,
+        });
+      }
+      const validGenders = ['Male', 'Female', 'Others'];
+      if (!validGenders.includes(gender)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid gender! Please provide Male, Female, or Others.',
         });
       }
       const checkUser = await User.findOne({ email });
@@ -70,6 +78,8 @@ const loginUser = async (req, res) => {
         success: false,
         message: 'Incorrect Email or Password! Please try again',
       });
+      console.log(checkUser,"checkuser");
+      
     const checkPasswordMatch = await bcrypt.compare(
       password,
       checkUser.password,
@@ -89,17 +99,19 @@ const loginUser = async (req, res) => {
       'CLIENT_SECRET_KEY',
       { expiresIn: '60m' },
     );
+    res.cookie('token', token, {httpOnly : true, secure : true}).json({
+            success : true,
+            message : 'Logged in successfully!!!',
+            userDetails : {
+                userName : checkUser.userName,
+                email : checkUser.email,
+                gender : checkUser.gender,
+                dob : checkUser.dob,
+                country : checkUser.country
+            },
+            token : token,
+        });
 
-    res.status(200).json({
-      success: true,
-      message: 'Logged in successfully',
-      token,
-      user: {
-        email: checkUser.email,
-        id: checkUser._id,
-        userName: checkUser.userName,
-      },
-    });
   } catch (e) {
     console.log(e);
     res.status(500).json({
@@ -117,25 +129,23 @@ const logoutUser = (req, res) => {
   });
 };
 
-const authMiddleware = async (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token)
-    return res.status(401).json({
-      success: false,
-      message: 'Unauthorized user',
+const authMiddleware = async(req,res,next)=> {
+    const token = req.cookies.token;
+    if(!token) return res.status(401).json({
+        success : false,
+        message :'Unauthorized user',
     });
 
-  try {
-    const decoded = jwt.verify(token, 'CLIENT_SECRET_KEY');
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(401).json({
-      success: false,
-      message: 'Unauthorized user',
-    });
-  }
-};
+    try{
+        const decoded = jwt.verify(token, 'CLIENT_SECRET_KEY');
+        req.user = decoded;
+        next();
+    } catch(error) {
+        res.status(401).json({
+        success : false,
+        message :'Unauthorized user',
+        });
+    }
+}
 
 module.exports = { registerUser, loginUser, logoutUser, authMiddleware };

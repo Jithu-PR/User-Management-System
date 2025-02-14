@@ -9,16 +9,16 @@ const authRouter= require('./routes/auth-routes');
 
 
 mongoose
-  .connect(process.env.MONGO_URL)
+  .connect("mongodb+srv://jithupr183:lDmlGcwkZTEBndbs@user-management-system.c7ugh.mongodb.net/")
   .then(() => console.log('mongo db connected'))
   .catch((error) => console.log('error'));
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 
 app.use(
   cors({
-    origin: process.env.CLIENT_BASE_URL,
+    origin: "http://localhost:5000",
     methods: ['GET', 'POST', 'DELETE', 'PUT'],
     allowedHeaders: [
       'Content-Type',
